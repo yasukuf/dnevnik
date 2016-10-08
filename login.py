@@ -8,7 +8,7 @@ import random
 import re
 import json
 
-from gosuslugi_config import gosuslugi
+from gosuslugi_config import gosuslugi, dnevnik
 
 
 
@@ -205,7 +205,7 @@ def get_dnevnik_token(cfg):
     print(js)
     print_dict(js)
 
-    # 10. Obtain token
+    # 10. Obtain token from my.mos.ru/data/token
     ps.cookies.pop("login_href")
     ps.cookies.pop("JSESSIONID")
     ps.cookies.pop("PHPSESSID")
@@ -233,11 +233,52 @@ def get_dnevnik_token(cfg):
     print_dict(ps.headers)
     print("Session cookies")
     print_dict(ps.cookies)
-    r=my_get_post(ps.post,"https://my.mos.ru/data/token", data=tokenparams)
+    r=my_get_post(ps.post,"https://my.mos.ru/data/token", data=js)
     print("Token:")
     print(r)
     print("Text:")
     print(r.text)
+
+    pgu_token=json.loads(r.text)
+
+    # 10.1 Get list of diaries
+
+    r=my_get_post(ps.get,"https://my.mos.ru/data/"+pgu_token["token"]+"/profile/me/E_DIARY/?_=1475685723951")
+    print("Diaries:")
+    print(r.text)
+
+    # 11. Obtain token for dnevnik
+
+    dnevnikparams={ 
+            "ajaxAction" : "get_token", 
+            "ajaxModule" : "DogmJournal",
+            "data[login]": dnevnik["login"],
+            "data[pass]" : dnevnik["password"],
+            "data[subsystem]" : "e" }
+    ps.cookies["elk_token"]=ps.cookies["elk_id"]+"|"+pgu_token["token"]
+    print_dict(ps.cookies)
+    r=my_get_post(ps.post,"https://pgu.mos.ru/ru/application/dogm/journal/",
+            data=dnevnikparams)
+    print("Diary auth token:")
+    print(r.text)
+
+    diary_auth_token=json.loads(r.text)
+    print(diary_auth_token["data"]["params"]["token"]  )
+
+    # 12. Get Marks!
+    ps.cookies["auth_token"]=diary_auth_token["data"]["params"]["token"]
+    ps.cookies["profile_id"]="3096733"
+    ps.cookies["profile_roles"]="student"
+    ps.cookies["aid"]="4"
+    ps.cookies["is_auth"]="true"
+    ps.cookies["request_method"]="GET"
+    print("Session cookies so far:")
+    print_dict(ps.cookies)
+    r=my_get_post(ps.get,"https://dnevnik.mos.ru/core/api/marks?created_at_from=03.10.2016&created_at_to=09.10.2016&page=1&per_page=50&pid=3096733&student_profile_id=3096733")
+    print("Marks:")
+    print(r.text)
+
+
     
 #print(r.text)
      
