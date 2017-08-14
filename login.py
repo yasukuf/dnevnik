@@ -8,8 +8,11 @@ import random
 import re
 import json
 
+import pdb
+
 from gosuslugi_config import gosuslugi, dnevnik
 
+MozWin='Mozilla/5.0 (Windows NT 6.1; WOW64; rv:51.0) Gecko/20100101 Firefox/51.0'
 
 
 def my_get_post(f,url, **kwargs):
@@ -35,6 +38,107 @@ def print_dict(d):
     """ Pretty dictionary printer. For debugging """
     for key, value in d.items() :
             print ("["+key+"]=["+str(value)+"]")
+
+
+def get_registered_journals(cfg):
+    """ Get registered journals """
+    ps = requests.Session()
+    r = my_get_post(ps.get,"https://www.mos.ru/pgu/ru/application/dogm/journal/")
+
+def mos_auth(cfg):
+    """ authorization on mos.ru """
+    ps=requests.Session()
+    cfg["ps"]=ps
+    ps.headers['User-Agent']=MozWin
+    r=my_get_post(ps.get,"https://www.mos.ru")
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,"https://www.mos.ru/api/oauth20/v1/frontend/json/ru/process/enter")
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,r.headers['Location'])
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,r.headers['Location'])
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,r.headers['Location'])
+    login_data={ 'j_username':cfg['login'], 'j_password' : cfg['password'] ,
+            'accessType' : 'alias'}
+    r= my_get_post(ps.post,"https://oauth20.mos.ru/sps/j_security_check",
+            data=login_data)
+    cfg['token']=ps.cookies['Ltpatoken2']
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,r.headers['Location']) # wsauth
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,r.headers['Location']) # result
+    cfg['mostoken']=ps.cookies['mos_oauth20_token']
+
+
+
+
+    print("response:")
+    print(r)
+    print("headers:")
+    print_dict(r.headers)
+    print("cookies:")
+    print_dict(ps.cookies)
+
+
+    print("----------8<---------")
+
+def dnevnik_auth(cfg):
+    ps=cfg["ps"]
+    #ps.cookies["Ltpatoken2"]=cfg["token"]
+    #ps.cookies["mos_oauth20_token"]=cfg["mostoken"]
+    #ps.cookies["authtype"]="1"
+    #ps.cookies["mos_id"]="CllGxlmRmORBZFNoK19+AgA="
+    #ps.cookies["mos_user_segment"]="default"
+    #pdb.set_trace()
+    
+    #milisecs=calendar.timegm(time.gmtime())*1000+random.randint(0,999)+1
+    #r=my_get_post(ps.get,"https://my.mos.ru/static/js/elk-api-0.3.js?_="+str(milisecs))
+    #milisecs=calendar.timegm(time.gmtime())*1000+random.randint(0,999)+1
+    #r=my_get_post(ps.get,"https://my.mos.ru/static/js/cookie.js?_="+str(milisecs))
+
+    milisecs=calendar.timegm(time.gmtime())*1000+random.randint(0,999)+1
+    r=my_get_post(ps.get, "https://my.mos.ru/static/xdm/index.html?nocache="+str(milisecs)+"&xdm_e=https%3A%2F%2Fwww.mos.ru&xdm_c=default1&xdm_p=1")
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,r.headers['Location'])
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,r.headers['Location'])
+    ps.cookies.update(r.cookies)
+    r=my_get_post(ps.get,r.headers['Location'])
+   
+#    ps.cookies.update(r.cookies)
+#    print_dict(ps.cookies)
+    #ref="https://my.mos.ru/static/xdm/index.html?nocache="+str(milisecs)+"&xdm_e=https%3A%2F%2Fwww.mos.ru&xdm_c=default1&xdm_p=1"
+
+    #r=my_get_post(ps.get,"https://my.mos.ru/static/js/easyXDM-2.4.17.1.min.js", headers={"referer" :    ref })
+    #r=my_get_post(ps.get,"https://my.mos.ru/static/js/xdm.min.js", headers={"referer" :    ref })
+    
+    r=my_get_post(ps.get,"https://www.mos.ru/api/oauth20/v1/frontend/json/ru/options")
+    opts=json.loads(r.text)
+
+    # надо: nonce signature timestamp
+    #print("token request cookies:")
+    #print_dict(ps.cookies)
+    token_data={"signature":opts["elk"]["signature"],"nonce":opts["elk"]["nonce"],
+            "timestamp":opts["elk"]["timestamp"],"system_id":opts["elk"]["system_id"]}
+    r=my_get_post(ps.post,"https://my.mos.ru/data/token", data=token_data)
+
+    cfg["diary_token"]=json.loads(r.text)["token"]
+
+def dnevnik_getlist(cfg):
+    ps=cfg["ps"]
+    milisecs=calendar.timegm(time.gmtime())*1000+random.randint(0,999)+1
+    r=my_get_post(ps.get,"https://my.mos.ru/data/"+cfg["diary_token"]+"/profile/me/E_DIARY/?_="+str(milisecs))
+    print("list:")
+    print(r.text)
+            
+
+
+    
+
+
+
+
 
 
 def get_dnevnik_token(cfg):
@@ -287,4 +391,9 @@ def get_dnevnik_token(cfg):
 #print(r.headers)
 
 
-get_dnevnik_token(gosuslugi)
+#get_dnevnik_token(gosuslugi)
+
+mos_auth(gosuslugi)
+dnevnik_auth(gosuslugi)
+
+dnevnik_getlist(gosuslugi)
