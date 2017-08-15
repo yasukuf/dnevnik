@@ -1,0 +1,45 @@
+#!env pyton3
+
+import requests
+
+from utils import my_get_post
+
+
+class PGUAuthenticator:
+    """ PGU Authenticator """
+    def __init__(self, cfg):
+        self._ps = requests.Session()
+        self._cfg = cfg
+        self._ps.headers['User-Agent'] = self._cfg.UA
+        self.token = ""
+        self.mostoken = ""
+        self.Authenticated = False
+                
+        pass
+    
+
+    def Authenticate(self):
+        r=my_get_post(self._ps.get,"https://www.mos.ru")
+        self._ps.cookies.update(r.cookies)
+        r=my_get_post(self._ps.get,"https://www.mos.ru/api/oauth20/v1/frontend/json/ru/process/enter")
+        self._ps.cookies.update(r.cookies)
+        r=my_get_post(self._ps.get,r.headers['Location'])
+        self._ps.cookies.update(r.cookies)
+        r=my_get_post(self._ps.get,r.headers['Location'])
+        self._ps.cookies.update(r.cookies)
+        r=my_get_post(self._ps.get,r.headers['Location'])
+        login_data={ 'j_username':self._cfg.login, 'j_password' : self._cfg.password , 'accessType' : 'alias'}
+        r= my_get_post(self._ps.post,"https://oauth20.mos.ru/sps/j_security_check", data=login_data)
+
+        self.token = self._ps.cookies['Ltpatoken2']
+        self._ps.cookies.update(r.cookies)
+        r = my_get_post(self._ps.get,r.headers['Location']) # wsauth
+        self._ps.cookies.update(r.cookies)
+        r = my_get_post(self._ps.get,r.headers['Location']) # result
+        self.mostoken = self._ps.cookies['mos_oauth20_token']
+
+        self.Authenticated = self.mostoken != ""
+
+        pass
+
+        
