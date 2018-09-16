@@ -15,12 +15,15 @@ auth = PGUAuthenticator(cfg)
 # pdb.set_trace()
 auth.Authenticate()
 
-#print(auth.token)
+print("GOSUSLUGI TOKEN:")
+print(auth.token)
 #print(auth.mostoken)
 
 d = Dnevnik(auth)
 d.Authenticate()
-j = d.ListDiaryAccounts()
-print(j)
+d.ObtainPGUToken()
+j = d.ListProfiles()
+print(j[3])
+d.SelectProfile(j[3])
 
 
