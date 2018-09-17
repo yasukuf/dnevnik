@@ -32,10 +32,18 @@ class MESHLibrary:
             "userId" : self._user_id, 
             "profileId" : self._profile_id,
             "authToken" : self._auth_token}
-        pdb.set_trace()
         r = my_get_post(ps.get, "https://uchebnik.mos.ru/authenticate", params=params)
         opts = {"auth_token" : self._auth_token }
         r = my_get_post(ps.post, "https://uchebnik.mos.ru/api/sessions",
                 json=opts, headers={"referer" : r.request.url, "Accept": "application/json; charset=UTF-8"})
 
+    def DownloadComposedDocument(self,id):
+        ps = self._ps
+        params={}
+        r=my_get_post(ps.get, "https://uchebnik.mos.ru/cms/api/composed_documents/"+id, params=params)
+        pdb.set_trace()
+
         pass
+
+
+
