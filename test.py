@@ -7,6 +7,7 @@ from colorama import init, Fore, Back, Style
 
 from pguauth import PGUAuthenticator
 from dnevnik import Dnevnik
+from libmesh import MESHLibrary
 
 from gosuslugi_config import cfg
 import json
@@ -34,14 +35,18 @@ if d.Authenticate():
 else:
     print(f"{Style.BRIGHT}{Back.RED}Ошибка!{Style.RESET_ALL}")
     exit()
-#print(d._profile)
+print(d._profile)
 print("Вход осуществлён пользователем: %s %s %s" % (
     d._profile['first_name'],
     d._profile['middle_name'],
     d._profile['last_name']))
 print("Роль: ", "Родитель" if d._profile['profiles'][0]['type'] == 'parent' else "Ученик")
 
-book_id=
+book_id=10621820
+
+lib = MESHLibrary(d)
+lib.Open()
+
 #j = d.ListProfiles()
 #print(j[3])
 #d.SelectProfile(j[3])
