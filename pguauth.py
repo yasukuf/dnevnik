@@ -20,32 +20,36 @@ class PGUAuthenticator:
 
     def Authenticate(self):
 
-        ps=self._ps
-        r=my_get_post(ps.get,"https://www.mos.ru")
-        print(r)
+        try:
+            ps=self._ps
+            r=my_get_post(ps.get,"https://www.mos.ru")
+            #print(r)
+            #print("cookies:")
+            #print_dict(r.cookies)
+            ps.cookies.update(r.cookies)
+            r=my_get_post(ps.get,"https://www.mos.ru/api/oauth20/v1/frontend/json/ru/process/enter")
+            ps.cookies.update(r.cookies)
+            r=my_get_post(ps.get,r.headers['Location'])
+            ps.cookies.update(r.cookies)
+            r=my_get_post(ps.get,r.headers['Location'])
+            ps.cookies.update(r.cookies)
+            r=my_get_post(ps.get,r.headers['Location'])
+            login_data={ 'j_username':self._cfg.login, 'j_password' : self._cfg.password , 'accessType' : 'alias'}
+            r= my_get_post(ps.post,"https://oauth20.mos.ru/sps/j_security_check", data=login_data)
 
-        print("cookies:")
-        print_dict(r.cookies)
-        ps.cookies.update(r.cookies)
-        r=my_get_post(ps.get,"https://www.mos.ru/api/oauth20/v1/frontend/json/ru/process/enter")
-        ps.cookies.update(r.cookies)
-        r=my_get_post(ps.get,r.headers['Location'])
-        ps.cookies.update(r.cookies)
-        r=my_get_post(ps.get,r.headers['Location'])
-        ps.cookies.update(r.cookies)
-        r=my_get_post(ps.get,r.headers['Location'])
-        login_data={ 'j_username':self._cfg.login, 'j_password' : self._cfg.password , 'accessType' : 'alias'}
-        r= my_get_post(ps.post,"https://oauth20.mos.ru/sps/j_security_check", data=login_data)
+            self.token = self._ps.cookies['Ltpatoken2']
+            self._ps.cookies.update(r.cookies)
+            r = my_get_post(self._ps.get,r.headers['Location']) # wsauth
+            self._ps.cookies.update(r.cookies)
+            r = my_get_post(self._ps.get,r.headers['Location']) # result?code=XXX
+            self.mostoken = self._ps.cookies['mos_oauth20_token']
+            #print("mostoken : " ,self.mostoken)
 
-        self.token = self._ps.cookies['Ltpatoken2']
-        self._ps.cookies.update(r.cookies)
-        r = my_get_post(self._ps.get,r.headers['Location']) # wsauth
-        self._ps.cookies.update(r.cookies)
-        r = my_get_post(self._ps.get,r.headers['Location']) # result?code=XXX
-        self.mostoken = self._ps.cookies['mos_oauth20_token']
+            self.Authenticated = self.mostoken != ""
+            #print("Authenticated:", self.Authenticated)
+        except:
+            self.Authenticated = False
 
-        self.Authenticated = self.mostoken != ""
-
-        pass
+        return self.Authenticated
 
         

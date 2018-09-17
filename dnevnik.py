@@ -63,24 +63,14 @@ class Dnevnik:
 
         self._mos_ru_token=json.loads(r.text)["token"]
 
-        print("mos.ru token:"+self._mos_ru_token)
-
-
-    def ObtainPGUToken(self):
-        ps=self._ps
-
         r=my_get_post(ps.get, "https://www.mos.ru/")
         ps.cookies.update(r.cookies)
-        # obtain ADV-PHPSESSID
         ps.cookies["mos_user_segment"]="default"
-        r=my_get_post(ps.get,
-                "https://www.mos.ru/api/schmetterling/platforms/63301?ref=https://www.mos.ru/",
+        r=my_get_post(ps.get,"https://www.mos.ru/pgu/ru/application/dogm/journal/?onsite_from=popular",
                 headers={"referer":"https://www.mos.ru/"})
+        # expect 301 redirect https://www.mos.ru/pgu/ru/application/dogm/journal/?onsite_from=popular
         ps.cookies.update(r.cookies)        
-        # refresh ADV-PHPSESSID
 
-        r=my_get_post(ps.get, "https://www.mos.ru/pgu/ru/services/link/2103/?onsite_from=3532")
-        ps.cookies.update(r.cookies) 
         # obtain PHPSESSID
         # 302 redirect to https://oauth20.mos.ru/sps/oauth/oauth20/authorize
         r=my_get_post(ps.get,r.headers['Location'])
@@ -92,23 +82,28 @@ class Dnevnik:
         r=my_get_post(ps.get,r.headers['Location'])
         ps.cookies.update(r.cookies)
 
-        pdb.set_trace()
-
-
-        # GET journal, obtain ELK token params
-        # ps.cookies.update({"elk_token":"|"+self._mos_ru_token})
         r=my_get_post(ps.get, "https://www.mos.ru/pgu/ru/application/dogm/journal/")
+        
+        dnevnik_top_referer = r.headers['Location']
 
-        m=re.search('requestToken\((.*?)\)', r.text)
-        opts=json.loads(m.group(1))
-        print("pgu.mos.ru token params:")
-        print(opts)
-        ps.cookies["elk_token"]="|"+self._mos_ru_token
-        r=my_get_post(ps.post,"https://my.mos.ru/data/token", data=opts)
-        print("pgu.mos.ru token:")
-        print(r.text)
-        self._pgu_mos_ru_token = json.loads(r.text)["token"]
-         
+        # 200 redirect to https://www.mos.ru/pgu/ru/services/link/2103/?onsite_from=3532
+        r=my_get_post(ps.get,r.headers['Location'])
+
+        # Тут мы в https://dnevnik.mos.ru/?token=64749fb9596a7f2078090a894ab31452
+        m=re.search('.*token=(.*)', dnevnik_top_referer)
+        self._auth_token=m.group(1)
+
+        opts = { "auth_token": self._auth_token }
+        
+        r=my_get_post(ps.post, "https://dnevnik.mos.ru/lms/api/sessions",
+                headers={"referer": dnevnik_top_referer}, json=opts)
+
+        self._profile=json.loads(r.text)
+
+        self.Authenticated = self._auth_token != ""
+        return self.Authenticated
+
+        
 
     def ListProfiles(self):
         """ Get list of diary accounts """

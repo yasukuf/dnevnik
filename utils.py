@@ -13,7 +13,7 @@ def my_get_post(f,url, **kwargs):
     maxtries=5
     attempt=0
     havedata=False
-    print("request:",url)
+    #print("request:",url)
     while attempt<maxtries:
         try:
             r=f(url,allow_redirects=False, **kwargs)
