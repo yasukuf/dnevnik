@@ -46,6 +46,7 @@ book_id=10621820
 
 lib = MESHLibrary(d)
 lib.Open()
+lib.DownloadComposedDocument(book_id)
 
 #j = d.ListProfiles()
 #print(j[3])

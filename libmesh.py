@@ -7,6 +7,9 @@ import json
 import re
 import pdb
 
+import websockets
+import asyncio
+
 from utils import my_get_post, print_dict
 
 """
@@ -32,16 +35,34 @@ class MESHLibrary:
             "userId" : self._user_id, 
             "profileId" : self._profile_id,
             "authToken" : self._auth_token}
+
         r = my_get_post(ps.get, "https://uchebnik.mos.ru/authenticate", params=params)
+        uchebnik_ref = r.request.url
         opts = {"auth_token" : self._auth_token }
         r = my_get_post(ps.post, "https://uchebnik.mos.ru/api/sessions",
-                json=opts, headers={"referer" : r.request.url, "Accept": "application/json; charset=UTF-8"})
+                json=opts, headers={"referer" : uchebnik_ref, "Accept": "application/json; charset=UTF-8"})
+        ps.cookies['auth_token'] = self._auth_token
+        r=my_get_post(ps.get,
+                "https://uchebnik.mos.ru/api/users/"+str(self._user_id),
+                headers={"referer": uchebnik_ref })
+        pdb.set_trace()
+        with websockets.connect(
+                "ws://uchebnik.mos.ru:433/rtm/p010/websocket?vsn=1.0.0") as ws:
+            s ='{"topic":"user:11841943","event":"phx_join","payload":{},"ref":"1"}'
+            ws.send(s)
+            rs =ws.recv()
+            print(rs)
+
+        pass
 
     def DownloadComposedDocument(self,id):
         ps = self._ps
         params={}
-        r=my_get_post(ps.get, "https://uchebnik.mos.ru/cms/api/composed_documents/"+id, params=params)
         pdb.set_trace()
+        r=my_get_post(ps.get,
+                "https://uchebnik.mos.ru/api/subjects?with_controllable_items=true",
+                headers={"Accept":"application/vnd.api.v1+json"})
+        #r=my_get_post(ps.get, "https://uchebnik.mos.ru/cms/api/composed_documents/"+str(id), params=params)
 
         pass
 
