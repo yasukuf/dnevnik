@@ -46,13 +46,6 @@ class MESHLibrary:
                 "https://uchebnik.mos.ru/api/users/"+str(self._user_id),
                 headers={"referer": uchebnik_ref })
         pdb.set_trace()
-        with websockets.connect(
-                "ws://uchebnik.mos.ru:433/rtm/p010/websocket?vsn=1.0.0") as ws:
-            s ='{"topic":"user:11841943","event":"phx_join","payload":{},"ref":"1"}'
-            ws.send(s)
-            rs =ws.recv()
-            print(rs)
-
         pass
 
     def DownloadComposedDocument(self,id):
