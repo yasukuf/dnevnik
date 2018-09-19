@@ -99,28 +99,42 @@ class Dnevnik:
                 headers={"referer": dnevnik_top_referer}, json=opts)
 
         self._profile=json.loads(r.text)
+        self._pid=str(self._profile["profiles"][0]["id"])
+        self._ids=str(self._profile["profiles"][0]["user_id"])
+        ps.headers["Auth-Token"]=self._auth_token
+
+        ps.cookies["authtype"]="1"
+        ps.cookies["aid"]="6"
+        ps.cookies["auth_token"]=self._auth_token
+        ps.cookies["is_auth"]="true"
+        ps.cookies["profile_id"]=self._pid
+        r=my_get_post(ps.get, "https://dnevnik.mos.ru/desktop",
+                headers={"referer":dnevnik_top_referer})
+
+        r=my_get_post(ps.post,f"https://dnevnik.mos.ru/lms/api/sessions?pid=self._profile['profiles'][0]['id']",
+                json=opts, headers={"referer":"https://dnevnik.mos.ru/desktop"})
 
         self.Authenticated = self._auth_token != ""
         return self.Authenticated
 
+    def ListStudents(self):
+        ps=self._ps
+        headers={"referer"    : "https://dnevnik.mos.ru/desktop", 
+            "Accept"     : "application/json",
+            "Profile-Id" : self._pid}        
         
-
-    def ListProfiles(self):
-        """ Get list of diary accounts """
-        milisecs=calendar.timegm(time.gmtime())*1000+random.randint(0,999)+1
-        r=my_get_post(self._ps.get,self._data_url+self._mos_ru_token+"/profile/me/E_DIARY/?_="+str(milisecs))
+        r=my_get_post(ps.get,f"https://dnevnik.mos.ru/acl/api/users?ids={self._ids}&pid={self._pid}",
+                headers=headers)
+        
         j=json.loads(r.text)
-        r=[]
-        for d in j["data"]:
-            system=""
-            try:
-                system=d["SYSTEM"]
-            except:
-                pass
-            a=DiaryProfile(d["LOGIN"],d["COMMENT"],d["PASSWORD"], system)
-            
-            r.append( a)
+        pdb.set_trace()
+        result=[]
+        for d in j[0]["profiles"][0]["children_profile_ids"]:
+            r=my_get_post(ps.get,"https://dnevnik.mos.ru/core/api/student_profiles?pid={j}",
+                    headers=headers)
+            result.append({ "id": j, "info": r.text})
 
+        pdb.set_trace()
 
         return r
 
@@ -161,10 +175,6 @@ class Dnevnik:
 
     def SelectDiaryAccount(id):
         """ Select diary account """
-        pass
-
-    def ListStudents():
-        """ Get list of supervised students """
         pass
 
     def SelectStudent(id):

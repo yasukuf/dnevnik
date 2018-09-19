@@ -8,7 +8,9 @@ from pprint import pprint
 with open('book.json') as f:
     data = json.load(f)
 
-pprint(data['articles'], depth=3, compact=True)
+pprint(data, depth=2, compact=True)
+
+#pprint(data['articles'], depth=3, compact=True)
 
 DownloadCM(data)
 

@@ -42,12 +42,9 @@ print("Вход осуществлён пользователем: %s %s %s" % (
     d._profile['last_name']))
 print("Роль: ", "Родитель" if d._profile['profiles'][0]['type'] == 'parent' else "Ученик")
 
-book_id=10621820
+students = d.ListStudents()
 
-lib = MESHLibrary(d)
-lib.Open()
-lib.DownloadComposedDocument(book_id)
-
+pprint(students)
 #j = d.ListProfiles()
 #print(j[3])
 #d.SelectProfile(j[3])
