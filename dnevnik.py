@@ -8,6 +8,8 @@ import json
 import re
 import pdb
 
+from pprint import pprint
+
 
 from utils import my_get_post, print_dict
 
@@ -123,20 +125,47 @@ class Dnevnik:
             "Accept"     : "application/json",
             "Profile-Id" : self._pid}        
         
-        r=my_get_post(ps.get,f"https://dnevnik.mos.ru/acl/api/users?ids={self._ids}&pid={self._pid}",
-                headers=headers)
+        r=my_get_post(ps.get,f"https://dnevnik.mos.ru/acl/api/users?ids={self._ids}&pid={self._pid}", headers=headers)
         
         j=json.loads(r.text)
-        pdb.set_trace()
         result=[]
-        for d in j[0]["profiles"][0]["children_profile_ids"]:
-            r=my_get_post(ps.get,"https://dnevnik.mos.ru/core/api/student_profiles?pid={j}",
-                    headers=headers)
-            result.append({ "id": j, "info": r.text})
+        r=my_get_post(ps.get,"https://dnevnik.mos.ru/core/api/student_profiles?pid={self._pid}",
+            headers=headers)
+        j=json.loads(r.text)
+        return j
 
+    def OpenDiary(self, student_id):
+        ps=self._ps
+
+        self._sh={"referer" : f"https://dnevnik.mos.ru/manage/student_journal/{student_id}",
+                "Accept" : "application/vnd.api.v3+json",
+                "Auth-Token" : self._auth_token,
+                "Profile-Id" : self._pid}
+
+        r=my_get_post(ps.get,f"https://dnevnik.mos.ru/manage/student_journal/{student_id}")
+        r=my_get_post(ps.post,f"https://dnevnik.mos.ru/lms/api/sessions?pid={self._pid}",
+            headers=self._sh)
+        self._sh["Accept"]="application/json"
+        return
+
+    def GetMarks(self,student_id):
+        ps=self._ps
+
+        params={
+                "created_at_from":"01.09.2018",
+                "created_at_to"  :"23.09.2018",
+                "page":"1", "per_page":"50",
+                "pid" : self._pid,
+                "student_profile_id": student_id}
+        r=my_get_post(ps.get,"https://dnevnik.mos.ru/core/api/marks",
+                params=params, headers=self._sh)
+        j=json.loads(r.text)
         pdb.set_trace()
+
 
         return r
+
+
 
     def SelectProfile(self, p):
         """ Select profile """

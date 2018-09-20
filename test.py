@@ -44,7 +44,14 @@ print("Роль: ", "Родитель" if d._profile['profiles'][0]['type'] == '
 
 students = d.ListStudents()
 
-pprint(students)
+for i,s in enumerate(students, start=1):
+    print(f"{i}. {s['user_name']}")
+
+d.OpenDiary(students[1]['id'])
+marks= d.GetMarks(students[1]['id'])
+
+pdb.set_trace()
+#pprint(students)
 #j = d.ListProfiles()
 #print(j[3])
 #d.SelectProfile(j[3])

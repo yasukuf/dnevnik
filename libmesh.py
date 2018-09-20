@@ -42,6 +42,7 @@ class MESHLibrary:
         r = my_get_post(ps.post, "https://uchebnik.mos.ru/api/sessions",
                 json=opts, headers={"referer" : uchebnik_ref, "Accept": "application/json; charset=UTF-8"})
         ps.cookies['auth_token'] = self._auth_token
+
         r=my_get_post(ps.get,
                 "https://uchebnik.mos.ru/api/users/"+str(self._user_id),
                 headers={"referer": uchebnik_ref })
