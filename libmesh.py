@@ -7,9 +7,6 @@ import json
 import re
 import pdb
 
-import websockets
-import asyncio
-
 from utils import my_get_post, print_dict
 
 """

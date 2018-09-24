@@ -1,6 +1,7 @@
 #!env pyton3
 
 import requests
+import pdb
 
 from utils import my_get_post, print_dict
 
@@ -19,7 +20,6 @@ class PGUAuthenticator:
     
 
     def Authenticate(self):
-
         try:
             ps=self._ps
             r=my_get_post(ps.get,"https://www.mos.ru")
@@ -34,7 +34,12 @@ class PGUAuthenticator:
             r=my_get_post(ps.get,r.headers['Location'])
             ps.cookies.update(r.cookies)
             r=my_get_post(ps.get,r.headers['Location'])
-            login_data={ 'j_username':self._cfg.login, 'j_password' : self._cfg.password , 'accessType' : 'alias'}
+
+            login_data={ 
+                    'j_username' : self._cfg.login, 
+                    'j_password' : self._cfg.password, 
+                    'accessType' : 'alias'}
+            
             r= my_get_post(ps.post,"https://oauth20.mos.ru/sps/j_security_check", data=login_data)
 
             self.token = self._ps.cookies['Ltpatoken2']

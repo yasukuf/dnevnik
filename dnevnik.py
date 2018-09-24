@@ -146,7 +146,15 @@ class Dnevnik:
         r=my_get_post(ps.post,f"https://dnevnik.mos.ru/lms/api/sessions?pid={self._pid}",
             headers=self._sh)
         self._sh["Accept"]="application/json"
+        LoadGroups()
+        LoadSchedule()
         return
+
+    def LoadGroups(self):
+        pass
+
+    def LoadSchedule(self):
+        pass
 
     def GetMarks(self,student_id):
         ps=self._ps
@@ -160,10 +168,8 @@ class Dnevnik:
         r=my_get_post(ps.get,"https://dnevnik.mos.ru/core/api/marks",
                 params=params, headers=self._sh)
         j=json.loads(r.text)
-        pdb.set_trace()
 
-
-        return r
+        return j
 
 
 

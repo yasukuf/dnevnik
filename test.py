@@ -10,6 +10,8 @@ from dnevnik import Dnevnik
 from libmesh import MESHLibrary
 
 from gosuslugi_config import cfg
+
+from pprint import pprint
 import json
 
 init()
@@ -49,8 +51,10 @@ for i,s in enumerate(students, start=1):
 
 d.OpenDiary(students[1]['id'])
 marks= d.GetMarks(students[1]['id'])
-
 pdb.set_trace()
+
+pprint(marks, depth=2)
+
 #pprint(students)
 #j = d.ListProfiles()
 #print(j[3])
